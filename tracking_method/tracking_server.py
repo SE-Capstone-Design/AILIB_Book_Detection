@@ -82,8 +82,7 @@ class YoloTrack(MediaStreamTrack):
 
                 # 3) 트래킹 업데이트 (ByteTrack)
                 tracked = self.tracker.update_with_detections(detections)
-
-              
+              #
                 try:
                     # 4) 시각화 (ID 라벨)
                     r_o_c = row_ocr_clustering(img,tracked,img_orignal)
