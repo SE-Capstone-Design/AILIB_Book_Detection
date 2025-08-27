@@ -18,12 +18,16 @@ from tracking_method.state import ManageItem
 from tracking_method.processing import row_ocr_clustering
 from tracking_method.boundingBox import draw_bounding_box
 
+import os
+
 # === NEW: supervision (ByteTrack + Annotators) ===
 import supervision as sv
 
 app = FastAPI()
 pcs = set()
-model = YOLO("weights.pt")  # 탐지 모델 그대로 사용
+base_dir = os.path.dirname(os.path.abspath(__file__))
+weights_path = os.path.join(base_dir, "weights.pt")
+model = YOLO(weights_path)  # 탐지 모델 그대로 사용
 
 app.add_middleware(
     CORSMiddleware,
