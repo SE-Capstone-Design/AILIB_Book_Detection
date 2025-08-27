@@ -1,5 +1,5 @@
 from tracking_method.itemStatus import ItemStatus
-from label_parsing import parse_ddc_key
+from tracking_method.label_parsing import parse_ddc_key
 import time
 
 class Item:
