@@ -3,7 +3,7 @@ import cv2
 from tracking_method.itemStatus import ItemStatus
 import cv2
 
-def draw_bounding_box(imgs, r_o_c, original_img, detections):
+def draw_bounding_box(r_o_c, original_img, detections):
     current_ids = [tracker_id for tracker_id in detections.tracker_id]
   # 현재 시점 ID들만 추출
 
@@ -18,19 +18,11 @@ def draw_bounding_box(imgs, r_o_c, original_img, detections):
             color = (255, 255, 255)
 
         for j in v:
-            if j.tracker_id not in current_ids:   # ✅ 현재 프레임에 없는 id는 스킵
+            if j.tracker_id not in current_ids:   #  현재 프레임에 없는 id는 스킵
                 continue
 
             x1, y1, x2, y2 = map(int, j.xyxy)
             label = f"{j.tracker_id}"
-
-            # 원본 해상도 보정
-            orig_h, orig_w = original_img.shape[:2]
-            resized_w, resized_h = (640, 640)
-            x1 = int(x1 * orig_w / resized_w)
-            x2 = int(x2 * orig_w / resized_w)
-            y1 = int(y1 * orig_h / resized_h)
-            y2 = int(y2 * orig_h / resized_h)
 
             # 1. 내부 반투명 박스
             alpha = 0.25

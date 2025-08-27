@@ -55,7 +55,7 @@ class YoloTrack(MediaStreamTrack):
         print(torch.cuda.get_device_name(0))
 
         # === NEW: ByteTrack & Annotators ===
-        self.tracker = sv.ByteTrack(track_activation_threshold = 0.5)  
+        self.tracker = sv.ByteTrack(track_activation_threshold = 0.5,minimum_consecutive_frames=3)  
         self.thread = threading.Thread(target=self._yolo_thread, daemon=True)
         self.thread.start()
 
@@ -71,10 +71,8 @@ class YoloTrack(MediaStreamTrack):
                 frame = self.frame_queue.get(timeout=1)
                 img_orignal = frame.to_ndarray(format="bgr24")
                 # YOLO 입력 크기 통일 (선택)
-                img = cv2.resize(img_orignal, (640, 640))
-
                 # 1) 탐지
-                results = model(img, verbose=False)[0]
+                results = model(img_orignal, verbose=False)[0]
 
                 # 2) 탐지 → Detections 변환
                 detections = sv.Detections.from_ultralytics(results)
@@ -85,11 +83,11 @@ class YoloTrack(MediaStreamTrack):
               #
                 try:
                     # 4) 시각화 (ID 라벨)
-                    r_o_c = row_ocr_clustering(img,tracked,img_orignal)
+                    r_o_c = row_ocr_clustering(tracked,img_orignal)
                     r_img = img_orignal.copy()
                     if len(r_o_c) > 0:
                         total = self.manage.start(r_o_c)
-                        r_img = draw_bounding_box(img, total,img_orignal,detections)                                    
+                        r_img = draw_bounding_box(total,img_orignal,detections)                                    
                         # 5) 결과 datachnannel 전송                                  
                         print(self.convert_items(total))                  
                         self._send_datachannel_safe(json.dumps(self.convert_items(total)))             
@@ -109,9 +107,7 @@ class YoloTrack(MediaStreamTrack):
                 continue
 
     async def recv(self):
-        print("📥 recv() 호출됨")
         frame = await self.track.recv() # frame 수신 
-        print("📥 recv frame:", frame.pts)
         while not self.frame_queue.empty(): # 채워져있다면
             try:
                 self.frame_queue.get_nowait()     # 큐에서 버림
@@ -129,10 +125,8 @@ class YoloTrack(MediaStreamTrack):
             if self.result_frame is not None:
                 out = self.result_frame
                 self.result_frame = None   #  사용했으니 초기화
-                print("✅ return processed frame", out.pts)
                 return out                
             else:
-                print("➡️ return original frame", frame.pts)
                 return frame
                  
 
@@ -158,7 +152,15 @@ async def offer(request: Request):
         # YOLO 트랙이 이미 만들어졌다면 연결
         if yolo_track_holder["track"] is not None:
             yolo_track_holder["track"].data_channel = channel  
-    
+
+        @channel.on("message")
+        def on_message(message):
+            print("📨 DataChannel message:", message)
+            if message == "RESET":
+                if yolo_track_holder["track"]:
+                    yolo_track_holder["track"].manage = ManageItem()
+                    print("초기화 ON")
+        
         @channel.on("close")
         def on_close():
             print(f"DataChannel closed: {channel.label}")        
@@ -166,7 +168,6 @@ async def offer(request: Request):
             
     @pc.on("track")
     def on_track(track):
-        print("🔥 서버에서 비디오 트랙 받음:", track.kind)
         if track.kind == "video":
             yolo_track = YoloTrack(track, data_channel=data_channel_holder["ch"], loop=loop)
             yolo_track_holder["track"] = yolo_track

@@ -18,8 +18,7 @@ def get_object_detection_boxes(detections):
     
     
 
-def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None,
-                                  resized_shape=(640, 640)):
+def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
     """
     original_img: 원본 이미지 webrtc_frame
     boxes_id: YOLO 추적 후 나온 박스 리스트 (리사이즈된 이미지 기준 좌표)
@@ -28,23 +27,14 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None,
     if reader is None:
         reader = ocr_Reader
     
-    orig_h, orig_w = original_img.shape[:2]
-    resized_w, resized_h = resized_shape  # YOLO 입력 크기
     
     gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
     # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    original_img = gray
-    
+      
     for i, box in enumerate(boxes_id):
         x1, y1, x2, y2 = map(int, box["xyxy"])
 
-        # --- 좌표를 원본 크기로 변환 ---
-        x1 = int(x1 * orig_w / resized_w)
-        x2 = int(x2 * orig_w / resized_w)
-        y1 = int(y1 * orig_h / resized_h)
-        y2 = int(y2 * orig_h / resized_h)
-
-        cropped = original_img[y1:y2, x1:x2]
+        cropped = gray[y1:y2+1, x1:x2+1]
 
         if cropped.size == 0:
             boxes_id[i]['ocr'] = None
@@ -101,7 +91,7 @@ def cluster_boxes(boxes, eps=800, min_samples=1):
 
 
 
-def row_ocr_clustering(imgs, tracked,original_img):
+def row_ocr_clustering(tracked,original_img):
     boxes_id = get_object_detection_boxes(tracked) 
     if boxes_id is None or len(boxes_id) == 0:
         return [] 
