@@ -108,37 +108,31 @@ class YoloTrack(MediaStreamTrack):
                 continue
 
     async def recv(self):
-        frame = await self.track.recv()
+        frame = await self.track.recv() # frame 수신 
 
-        while not self.frame_queue.empty():
+        while not self.frame_queue.empty(): # 채워져있다면
             try:
-                self.frame_queue.get_nowait()
+                self.frame_queue.get_nowait()     # 큐에서 버림
             except queue.Empty:
-                break
+                break # 큐가 비었으면 종료
 
         try:
-            self.frame_queue.put_nowait(frame)
+            self.frame_queue.put_nowait(frame) # 큐에 비동기로 삽입
         except queue.Full:
             pass
 
+        # --- 결과 프레임 반환 ---
         with self.lock:
-            return self.result_frame if self.result_frame else frame
+            if self.result_frame is not None:
+                out = self.result_frame
+                self.result_frame = None   #  사용했으니 초기화
+                return out
+            else:
+                return frame 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "ok"}
-
-# @app.get("/offer")
-# async def offer(request: Request):
-#     params = await request.json()
-#     description = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-#     pc = RTCPeerConnection()
-#     pcs.add(pc)
-
-#     loop = asyncio.get_event_loop()
-#     data_channel_holder = {"ch": None}
-#     yolo_track_holder = {"track": None}
-
 
 @app.post("/offer")
 async def offer(request: Request):
