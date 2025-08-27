@@ -170,9 +170,10 @@ class ManageItem:
     def start(self,results):
         self.input_predict(results)
         self.detect_bookLabel()
-        n = [i.to_dict() for i in self.get_normal()]
-        m = [i.to_dict() for i in self.get_misplaced()]
-        p = [i.to_dict() for i in self.get_pending()]
+        n = self.get_normal()
+        m = self.get_misplaced()
+        p = self.get_pending()
+        print({"normal": n, "misplaced":m,"pending":p })
         return {"normal": n, "misplaced":m,"pending":p }
             
             
