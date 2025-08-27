@@ -19,3 +19,13 @@ class Item:
     
     def id(self):
         return self.tracker_id
+    
+    def to_dict(self):
+        return {
+            "tracker_id": self.tracker_id,
+            "xyxy": self.xyxy,
+            "ocr": self.ocr,
+            "ocr_conf": self.ocr_conf,
+            "row": self.row,
+            "status": self.status.name if self.status else None
+        }
