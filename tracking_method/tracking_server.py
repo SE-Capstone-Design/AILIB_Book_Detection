@@ -125,16 +125,16 @@ class YoloTrack(MediaStreamTrack):
 async def health_check():
     return {"status": "ok"}
 
-@app.get("/offer")
-async def offer(request: Request):
-    params = await request.json()
-    description = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-    pc = RTCPeerConnection()
-    pcs.add(pc)
+# @app.get("/offer")
+# async def offer(request: Request):
+#     params = await request.json()
+#     description = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
+#     pc = RTCPeerConnection()
+#     pcs.add(pc)
 
-    loop = asyncio.get_event_loop()
-    data_channel_holder = {"ch": None}
-    yolo_track_holder = {"track": None}
+#     loop = asyncio.get_event_loop()
+#     data_channel_holder = {"ch": None}
+#     yolo_track_holder = {"track": None}
 
 
 @app.post("/offer")

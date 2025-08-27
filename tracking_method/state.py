@@ -54,7 +54,9 @@ class ManageItem:
             # 만약 tracker_id가 같은 경우 ocr 신뢰도 높은 값으로 update 
             # 아닐 경우 삽입 
             if item.tracker_id == it.tracker_id:
-                if it.ocr_conf is None:
+                if it.ocr_conf is None and item.ocr_conf is None:
+                    return 
+                elif it.ocr_conf is None:
                     s = self.items[item.row][i].status
                     self.items[item.row][i] = item
                     self.items[item.row][i].status = s                      
