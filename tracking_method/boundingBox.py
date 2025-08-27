@@ -45,3 +45,5 @@ def draw_bounding_box(imgs,r_o_c):
                         (255, 255, 255),
                         1,
                         cv2.LINE_AA)
+    return imgs        
+            

@@ -173,7 +173,7 @@ class ManageItem:
         n = self.get_normal()
         m = self.get_misplaced()
         p = self.get_pending()
-        print({"normal": n, "misplaced":m,"pending":p })
+
         return {"normal": n, "misplaced":m,"pending":p }
             
       
