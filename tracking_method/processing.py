@@ -56,7 +56,7 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None,
 
         if not result:
             boxes_id[i]['ocr'] = None
-            boxes_id[i]['ocr_conf'] = None
+            boxes_id[i]['ocr_conf'] = 0.0
         else:
             _, text, conf = result[0]
             boxes_id[i]['ocr'] = text.strip()
