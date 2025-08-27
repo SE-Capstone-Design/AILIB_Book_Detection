@@ -28,13 +28,17 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
         reader = ocr_Reader
     
     
-    gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
     # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
       
     for i, box in enumerate(boxes_id):
         x1, y1, x2, y2 = map(int, box["xyxy"])
 
-        cropped = gray[y1:y2+1, x1:x2+1]
+        cropped = original_img[y1:y2+1, x1:x2+1]
+        gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+
 
         if cropped.size == 0:
             boxes_id[i]['ocr'] = None
