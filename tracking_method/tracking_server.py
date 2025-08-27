@@ -23,7 +23,7 @@ import supervision as sv
 
 app = FastAPI()
 pcs = set()
-model = YOLO("./weights.pt")  # 탐지 모델 그대로 사용
+model = YOLO("/home/ubuntu/AILIB_Book_Detection/tracking_method/weights.pt")  # 탐지 모델 그대로 사용
 
 app.add_middleware(
     CORSMiddleware,
