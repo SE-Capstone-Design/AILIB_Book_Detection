@@ -109,6 +109,7 @@ class YoloTrack(MediaStreamTrack):
                 continue
 
     async def recv(self):
+        print("📥 recv() 호출됨")
         frame = await self.track.recv() # frame 수신 
         print("📥 recv frame:", frame.pts)
         while not self.frame_queue.empty(): # 채워져있다면
@@ -165,6 +166,7 @@ async def offer(request: Request):
             
     @pc.on("track")
     def on_track(track):
+        print("🔥 서버에서 비디오 트랙 받음:", track.kind)
         if track.kind == "video":
             yolo_track = YoloTrack(track, data_channel=data_channel_holder["ch"], loop=loop)
             yolo_track_holder["track"] = yolo_track
