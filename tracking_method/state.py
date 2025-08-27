@@ -45,30 +45,64 @@ class ManageItem:
         self.items ={} # Key: Item.row value: [Item class]  
     
     def insert_update(self, item:Item):
-        """Item을 row 기준으로 items에 추가한다"""
-        if item.row not in self.items:
-            self.items[item.row] = []       
-        
-        ## tracker_id 중복 여부 확인 
-        for i,it in enumerate(self.items[item.row]):
-            # 만약 tracker_id가 같은 경우 ocr 신뢰도 높은 값으로 update 
-            # 아닐 경우 삽입 
-            if item.tracker_id == it.tracker_id:
-                if it.ocr_conf is None and item.ocr_conf is None:
-                    return 
-                elif it.ocr_conf is None:
-                    s = self.items[item.row][i].status
-                    self.items[item.row][i] = item
-                    self.items[item.row][i].status = s                      
-                elif item.ocr_conf is None: 
-                    return                    
-                elif item.ocr_conf > it.ocr_conf:
-                    s = self.items[item.row][i].status
-                    self.items[item.row][i] = item
-                    self.items[item.row][i].status = s                      
-                return    
-                    
-        self.items[item.row].append(item)     
+        """tracker_id 기준으로 우선 탐색해야 함.
+            먼저 모든 row에 있는 아이템들 중 tracker_id 같은 게 있는지 확인
+            있으면: 해당 아이템을 꺼내서 row가 바뀌었으면 새 row로 이동 및 OCR 신뢰도 비교후 높은 신뢰도로 ocr 교체 
+            없으면: 그냥 새로 삽입"""
+          # 1. tracker_id 탐색
+        found_row, found_idx = None, None
+        for row, items_in_row in self.items.items():
+            for idx, it in enumerate(items_in_row):
+                if it.tracker_id == item.tracker_id:
+                    found_row, found_idx = row, idx
+                    break
+            if found_row is not None:
+                break
+
+        if found_row is not None:  
+            # 2. 기존 item 존재
+            old_item = self.items[found_row][found_idx]
+            s = old_item.status  # 기존 status 유지
+
+            # OCR 신뢰도 비교
+            if old_item.ocr_conf is None and item.ocr_conf is None:
+                # 둘 다 OCR 없음 → 좌표만 갱신
+                old_item.xyxy = item.xyxy
+
+            elif old_item.ocr_conf is None:
+                # 기존 OCR 없음 → 새 item으로 교체
+                self.items[found_row][found_idx] = item
+
+            elif item.ocr_conf is None:
+                # 새 item에 OCR 없음 → 좌표만 갱신
+                old_item.xyxy = item.xyxy
+
+            elif item.ocr_conf > old_item.ocr_conf:
+                # 새 item이 OCR 더 정확 → 교체
+                self.items[found_row][found_idx] = item
+            else:
+                # 기존 OCR 더 정확 → 좌표만 갱신
+                old_item.xyxy = item.xyxy
+
+            # status는 항상 유지
+            self.items[found_row][found_idx].status = s
+
+            # 3. row 변경되었으면 새 row로 이동
+            if item.row != found_row:
+                # 기존 row에서 제거
+                moved_item = self.items[found_row].pop(found_idx)
+                if not self.items[found_row]:
+                    del self.items[found_row]  # 비면 삭제
+                # 새 row에 삽입
+                if item.row not in self.items:
+                    self.items[item.row] = []
+                self.items[item.row].append(moved_item)
+
+        else:
+            # 4. tracker_id 못 찾으면 새로 삽입
+            if item.row not in self.items:
+                self.items[item.row] = []
+            self.items[item.row].append(item)   
     
     def input_predict(self, results): ## 예측 결과를 items 변수에 삽입
         for i in results:
@@ -127,20 +161,26 @@ class ManageItem:
             new_items = sorted(new_items, key=lambda x: float(x.xyxy[0]))
 
             # parsed (DdcKey) 추출
-            parsed_keys = [it.parsed for it in new_items if it.parsed is not None]
+            parsed_indices = [(idx, it.parsed) 
+                  for idx, it in enumerate(new_items) 
+                  if it.parsed is not None]
 
-            # LIS 인덱스 구하기
+            parsed_keys = [p for _, p in parsed_indices]
             lis_idx = self._lis_indices(parsed_keys)
+
+            # lis_idx는 parsed_keys 인덱스 기준이니까,
+            # 다시 new_items 인덱스로 변환
+            lis_newitem_indices = {parsed_indices[i][0] for i in lis_idx}
 
             # LIS 안에 포함 → 정상, LIS 밖 → 잘못 배치
             for idx, it in enumerate(new_items):
                 if it.parsed is None:
                     it.status = ItemStatus.PENDING
-                elif idx in lis_idx:
+                elif idx in lis_newitem_indices:   # ✅ 이제 매핑 정확함
                     it.status = ItemStatus.NORMAL
                 else:
-                    it.status = ItemStatus.MISPLACED        
-    
+                    it.status = ItemStatus.MISPLACED   
+                
     def get_misplaced(self):
         wrong = []  
         for i in self.items.values():

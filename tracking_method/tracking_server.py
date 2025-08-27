@@ -55,7 +55,7 @@ class YoloTrack(MediaStreamTrack):
         print(torch.cuda.get_device_name(0))
 
         # === NEW: ByteTrack & Annotators ===
-        self.tracker = sv.ByteTrack()  
+        self.tracker = sv.ByteTrack(track_activation_threshold = 0.5)  
         self.thread = threading.Thread(target=self._yolo_thread, daemon=True)
         self.thread.start()
 
@@ -89,7 +89,7 @@ class YoloTrack(MediaStreamTrack):
                     r_o_c = row_ocr_clustering(img,tracked,img_orignal)
                     if len(r_o_c) > 0:
                         total = self.manage.start(r_o_c)
-                        img = draw_bounding_box(img, total,img_orignal)                                    
+                        img = draw_bounding_box(img, total,img_orignal,detections)                                    
                         # 5) 결과 datachnannel 전송                                  
                         print(self.convert_items(total))                  
                         self._send_datachannel_safe(json.dumps(self.convert_items(total)))             
