@@ -1,4 +1,4 @@
-from itemStatus import ItemStatus
+from tracking_method.itemStatus import ItemStatus
 from label_parsing import parse_ddc_key
 import time
 

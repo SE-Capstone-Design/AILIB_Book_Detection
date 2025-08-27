@@ -1,4 +1,4 @@
-from itemStatus import ItemStatus
+from tracking_method.itemStatus import ItemStatus
 import cv2
 
 def draw_bounding_box(imgs,r_o_c):
