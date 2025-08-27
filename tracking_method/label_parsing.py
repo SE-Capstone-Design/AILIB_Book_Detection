@@ -54,7 +54,7 @@ def _normalize(s):
     s = s.replace(',', '.')                   # 004,3 -> 004.3
     return s
 
-def parse_ddc_number(raw):
+def parse_ddc_key(raw):
     """DDC 문자열에서 숫자 부분만 Decimal로 파싱"""
     s = _normalize(raw)
     m = re.match(r'^(\d{3})(?:\.(\d+))?', s)  # 004 / 004.3 / 005.133

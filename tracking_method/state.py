@@ -176,7 +176,7 @@ class ManageItem:
             for idx, it in enumerate(new_items):
                 if it.parsed is None:
                     it.status = ItemStatus.PENDING
-                elif idx in lis_newitem_indices:   # ✅ 이제 매핑 정확함
+                elif idx in lis_newitem_indices:  
                     it.status = ItemStatus.NORMAL
                 else:
                     it.status = ItemStatus.MISPLACED   
