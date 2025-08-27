@@ -3,7 +3,7 @@ import easyocr
 import numpy as np
 import cv2
 
-ocr_Reader =  easyocr.Reader(['ko','en'], gpu = True,model_storage_directory= None,detector =False,quantize =False,cudnn_benchmark =True,recog_network='korean') # 배포시에는 True
+ocr_Reader =  easyocr.Reader(['ko','en'], gpu = True,model_storage_directory= None,detector =False,quantize =False,cudnn_benchmark =True) # 배포시에는 True
 
 
 def get_object_detection_boxes(detections):
