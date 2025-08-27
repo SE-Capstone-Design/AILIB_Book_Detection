@@ -1,5 +1,5 @@
 
-from itemStatus import ItemStatus
+from tracking_method.itemStatus import ItemStatus
 from item import Item
 
 def _lis_indices(keys):
