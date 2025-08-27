@@ -122,12 +122,12 @@ class YoloTrack(MediaStreamTrack):
 
         # --- 결과 프레임 반환 ---
         with self.lock:
-            if self.result_frame is not None:
+            # if self.result_frame is not None:
                 out = self.result_frame
-                self.result_frame = None   #  사용했으니 초기화
+                # self.result_frame = None   #  사용했으니 초기화
                 return out                
-            else:
-                return frame
+            # else:
+            #     return frame
                  
 
 @app.get("/health", tags=["Health"])
