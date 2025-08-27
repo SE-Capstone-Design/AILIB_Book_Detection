@@ -27,7 +27,7 @@ app = FastAPI()
 pcs = set()
 base_dir = os.path.dirname(os.path.abspath(__file__))
 weights_path = os.path.join(base_dir, "weights.pt")
-model = YOLO(weights_path)  # 탐지 모델 그대로 사용
+model = YOLO(weights_path).to("cuda")  # 탐지 모델 그대로 사용
 
 app.add_middleware(
     CORSMiddleware,
