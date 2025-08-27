@@ -86,18 +86,20 @@ class YoloTrack(MediaStreamTrack):
                 try:
                     # 4) 시각화 (ID 라벨)
                     r_o_c = row_ocr_clustering(img,tracked,img_orignal)
+                    r_img = img_orignal.copy()
                     if len(r_o_c) > 0:
                         total = self.manage.start(r_o_c)
-                        img = draw_bounding_box(img, total,img_orignal,detections)                                    
+                        r_img = draw_bounding_box(img, total,img_orignal,detections)                                    
                         # 5) 결과 datachnannel 전송                                  
                         print(self.convert_items(total))                  
                         self._send_datachannel_safe(json.dumps(self.convert_items(total)))             
-                                                
+                    # else:
+                    #     continue                            
                 except Exception as e:
                     print("DataChannel send error:", e)
 
                 # 6) 결과 프레임 교체
-                new_frame = VideoFrame.from_ndarray(img, format="bgr24")
+                new_frame = VideoFrame.from_ndarray(r_img, format="bgr24")
                 new_frame.pts = frame.pts
                 new_frame.time_base = frame.time_base
                 with self.lock:
@@ -108,7 +110,7 @@ class YoloTrack(MediaStreamTrack):
 
     async def recv(self):
         frame = await self.track.recv() # frame 수신 
-
+        print("📥 recv frame:", frame.pts)
         while not self.frame_queue.empty(): # 채워져있다면
             try:
                 self.frame_queue.get_nowait()     # 큐에서 버림
@@ -118,6 +120,7 @@ class YoloTrack(MediaStreamTrack):
         try:
             self.frame_queue.put_nowait(frame) # 큐에 비동기로 삽입
         except queue.Full:
+            print("⚠️ queue full, dropping frame")
             pass
 
         # --- 결과 프레임 반환 ---
@@ -125,9 +128,12 @@ class YoloTrack(MediaStreamTrack):
             if self.result_frame is not None:
                 out = self.result_frame
                 self.result_frame = None   #  사용했으니 초기화
-                return out
+                print("✅ return processed frame", out.pts)
+                return out                
             else:
-                return frame 
+                print("➡️ return original frame", frame.pts)
+                return frame
+                 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
