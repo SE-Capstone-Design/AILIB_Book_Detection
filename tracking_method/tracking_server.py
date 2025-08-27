@@ -89,7 +89,7 @@ class YoloTrack(MediaStreamTrack):
                     r_o_c = row_ocr_clustering(img,tracked,img_orignal)
                     if len(r_o_c) > 0:
                         total = self.manage.start(r_o_c)
-                        img = draw_bounding_box(img, total)                                    
+                        img = draw_bounding_box(img, total,img_orignal)                                    
                         # 5) 결과 datachnannel 전송                                  
                         print(self.convert_items(total))                  
                         self._send_datachannel_safe(json.dumps(self.convert_items(total)))             
