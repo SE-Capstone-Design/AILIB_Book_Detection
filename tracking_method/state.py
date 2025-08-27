@@ -1,6 +1,6 @@
 
 from tracking_method.itemStatus import ItemStatus
-from item import Item
+from tracking_method.item import Item
 
 def _lis_indices(keys):
     """O(n log n) LIS: 증가 부분수열의 '원본 인덱스 집합'을 반환."""
