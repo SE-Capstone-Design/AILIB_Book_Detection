@@ -1,5 +1,5 @@
 # Python 이미지 사용 (개발 버전 맞추기)
-FROM pytorch/pytorch:2.7-cuda12.8-cudnn8-runtime
+FROM pytorch/pytorch:1.13.1-cuda12.8-cudnn8-runtime
 
 # 작업 디렉토리 설정 - docker 컨태이너 내에 작업 디텍토리 이름
 WORKDIR /app
