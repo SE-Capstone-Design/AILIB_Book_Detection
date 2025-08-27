@@ -121,6 +121,22 @@ class YoloTrack(MediaStreamTrack):
         with self.lock:
             return self.result_frame if self.result_frame else frame
 
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok"}
+
+@app.get("/offer")
+async def offer(request: Request):
+    params = await request.json()
+    description = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
+    pc = RTCPeerConnection()
+    pcs.add(pc)
+
+    loop = asyncio.get_event_loop()
+    data_channel_holder = {"ch": None}
+    yolo_track_holder = {"track": None}
+
+
 @app.post("/offer")
 async def offer(request: Request):
     params = await request.json()
@@ -155,6 +171,7 @@ async def offer(request: Request):
     
     @pc.on("connectionstatechange")
     async def on_connectionstatechange():
+        print("connectionstatechange")
         if pc.connectionState in ["failed", "closed"]:
             await pc.close()
             pcs.discard(pc)
