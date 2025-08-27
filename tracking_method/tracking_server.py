@@ -55,7 +55,7 @@ class YoloTrack(MediaStreamTrack):
         print(torch.cuda.get_device_name(0))
 
         # === NEW: ByteTrack & Annotators ===
-        self.tracker = sv.ByteTrack(track_activation_threshold = 0.5,minimum_consecutive_frames=3)  
+        self.tracker = sv.ByteTrack(track_activation_threshold = 0.5,minimum_consecutive_frames=3,lost_track_buffer = 60,minimum_matching_threshold=0.95,)  
         self.thread = threading.Thread(target=self._yolo_thread, daemon=True)
         self.thread.start()
 
