@@ -166,9 +166,7 @@ class ManageItem:
                     normal.append(v)       
         return normal         
             
-    def convert_items(self, total):
-        return {k: [i.to_dict() for i in v] for k, v in total.items()}       
-    
+     
     def start(self,results):
         self.input_predict(results)
         self.detect_bookLabel()
@@ -176,7 +174,7 @@ class ManageItem:
         m = self.get_misplaced()
         p = self.get_pending()
         print({"normal": n, "misplaced":m,"pending":p })
-        return self.convert_items({"normal": n, "misplaced":m,"pending":p })
+        return {"normal": n, "misplaced":m,"pending":p }
             
       
                     

@@ -62,7 +62,9 @@ class YoloTrack(MediaStreamTrack):
     def _send_datachannel_safe(self, message: str):
         if self.data_channel and self.data_channel.readyState == "open":
             self.loop.call_soon_threadsafe(self.data_channel.send, message)
-
+    def convert_items(self, total):
+        return {k: [i.to_dict() for i in v] for k, v in total.items()}     
+    
     def _yolo_thread(self):
         while self.running:
             try:
@@ -89,7 +91,8 @@ class YoloTrack(MediaStreamTrack):
                         total = self.manage.start(r_o_c)
                         draw_bounding_box(img, total)                                    
                         # 5) 결과 datachnannel 전송    
-                        self._send_datachannel_safe(json.dumps(total))             
+                                                
+                        self._send_datachannel_safe(json.dumps(self.convert_items(total)))             
                                                 
                 except Exception as e:
                     print("DataChannel send error:", e)
