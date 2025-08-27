@@ -14,9 +14,9 @@ from av import VideoFrame
 from ultralytics import YOLO
 import queue
 import threading
-from state import ManageItem 
-from processing import row_ocr_clustering
-from boundingBox import draw_bounding_box
+from tracking_method.state import ManageItem 
+from tracking_method.processing import row_ocr_clustering
+from tracking_method.boundingBox import draw_bounding_box
 
 # === NEW: supervision (ByteTrack + Annotators) ===
 import supervision as sv
