@@ -73,29 +73,47 @@ def cluster_boxes(boxes, eps=0.34990236345839165, min_samples=5):
 
 
 def duplicate_text(combined):
+    n = len(combined)
+    flags = np.zeros(n, dtype=bool)  
+    
     li = []  
     for label in np.unique(combined[:,0]):
         idx = np.where(combined[:, 0].astype(int) == label)[0]
         group = combined[idx]
-
+        text = group[:,1] 
         if len(group) < 3:
             continue
 
-        unique_texts, counts = np.unique(group[:, 1], return_counts=True)
+        unique_texts, counts = np.unique(text, return_counts=True)
 
         # 모든 값이 동일한 그룹은 제외하고 싶다면
         if unique_texts.size == 1:
+            flags[idx] = True
             continue
 
         # 최빈(동률 포함) 텍스트 집합
         most_common_texts = unique_texts[counts == counts.max()]
 
-        # 최빈 텍스트들을 전부 제외 → “적게 나온 것들”만 남김
-        keep_mask = ~np.isin(group[:, 1], most_common_texts)
-        li.extend(group[keep_mask])
+        # 최빈 텍스트는 True, 나머지는 False
+        flags[idx] = np.isin(text, most_common_texts)
 
-    return li
-     
+    return np.concatenate([combined, flags.reshape(-1, 1).astype(object)], axis=1)
+
+
+def json_parsing(combined):
+    result = []
+    dic = {}
+
+    for row in combined.tolist():
+        result.append({
+            "label": row[0],
+            "text": row[1],
+            "box": row[2:5],
+            "estimation": row[5]
+        })
+            
+    return result    
+        
 
 def ocr_with_row_clustering(image, results):
     boxes = get_object_detection_boxes(results)
@@ -107,5 +125,6 @@ def ocr_with_row_clustering(image, results):
     row_labels = cluster_boxes(boxes)
 
     combined = np.concatenate([row_labels.reshape(-1, 1), texts.reshape(-1, 1), boxes ], axis=1)
-    # total = duplicate_text(combined)
-    return combined  
+    total = duplicate_text(combined)
+    
+    return json_parsing(total)  

@@ -12,7 +12,7 @@ from av import VideoFrame
 from ultralytics import YOLO
 import queue
 import threading
-from tracking_method.processing import ocr_with_row_clustering
+from object_processing import ocr_with_row_clustering
 
 # E:
 # cd AILIB_OBJECTDETECTION
@@ -20,7 +20,7 @@ from tracking_method.processing import ocr_with_row_clustering
 
 app = FastAPI()
 pcs = set()
-model = YOLO("./weights.pt")
+model = YOLO("../weights.pt")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,9 +63,11 @@ class YoloTrack(MediaStreamTrack):
 
                 # ✅ ndarray → list 변환 후 JSON 직렬화
                 try:
+                    
                     message = json.dumps(ocr_result.tolist() if hasattr(ocr_result, "tolist") else ocr_result)
                     # message = {"a":"test"}
-                    self._send_datachannel_safe(json.dumps(message))
+                 
+                    self._send_datachannel_safe(message)
                 except Exception as e:
                     print("DataChannel send error:", e)
 
@@ -116,23 +118,7 @@ async def offer(request: Request):
         # YOLO 트랙이 이미 만들어졌다면 연결
         if yolo_track_holder["track"] is not None:
             yolo_track_holder["track"].data_channel = channel       
-        
-        # def _send_hello():
-        #     try:
-        #         channel.send(json.dumps({"hello": "from server"}, ensure_ascii=False))
-        #         print("✅ sent hello")
-        #     except Exception as e:
-        #         print("send hello failed:", e)        
-        # @channel.on("open")
-        # def on_open():
-        #     print("📨 datachannel open (server), state:", channel.readyState)
-        #     try:
-        #         # 1) 즉시 hello
-        #         _send_hello()
-        #         print("✅ sent hello")
-        #     except Exception as e:
-
-        
+           
                 
         @channel.on("close")
         def on_close():

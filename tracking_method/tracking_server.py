@@ -8,18 +8,22 @@ from aiortc import (
     RTCPeerConnection, MediaStreamTrack, RTCSessionDescription,
     RTCDataChannel
 )
+import torch
+
 from av import VideoFrame
 from ultralytics import YOLO
 import queue
 import threading
-from tracking_method.processing import ocr_with_row_clustering, duplicate_text
+from state import ManageItem 
+from processing import row_ocr_clustering
+from boundingBox import draw_bounding_box
 
 # === NEW: supervision (ByteTrack + Annotators) ===
 import supervision as sv
 
 app = FastAPI()
 pcs = set()
-model = YOLO("./yolov8n.pt")  # 탐지 모델 그대로 사용
+model = YOLO("../weights.pt")  # 탐지 모델 그대로 사용
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,12 +45,13 @@ class YoloTrack(MediaStreamTrack):
         self.result_frame = None
         self.lock = threading.Lock()
         self.running = True
+        self.manage = ManageItem() 
+        print(torch.cuda.is_available()) 
+        print(torch.version.cuda)  
+        print(torch.cuda.get_device_name(0))
 
         # === NEW: ByteTrack & Annotators ===
         self.tracker = sv.ByteTrack()  
-        self.box_annotator = sv.BoxAnnotator(thickness=2) # 경계 상자 선의 두께.
-        self.label_annotator = sv.LabelAnnotator(text_thickness=2, text_scale=0.5) #텍스트 두께.
-
         self.thread = threading.Thread(target=self._yolo_thread, daemon=True)
         self.thread.start()
 
@@ -58,9 +63,9 @@ class YoloTrack(MediaStreamTrack):
         while self.running:
             try:
                 frame = self.frame_queue.get(timeout=1)
-                img = frame.to_ndarray(format="bgr24")
+                img_orignal = frame.to_ndarray(format="bgr24")
                 # YOLO 입력 크기 통일 (선택)
-                img = cv2.resize(img, (640, 640))
+                img = cv2.resize(img_orignal, (640, 640))
 
                 # 1) 탐지
                 results = model(img, verbose=False)[0]
@@ -70,67 +75,23 @@ class YoloTrack(MediaStreamTrack):
                 # (필요 시 감도 조정) conf 필터 예: detections = detections[detections.confidence > 0.25]
 
                 # 3) 트래킹 업데이트 (ByteTrack)
-                #   supervision 0.19+ 버전은 인자 없이도 동작.
-                #   특정 해상도/프레임 속도 기반 튜닝이 필요하면 ByteTrackArgs로 세부설정 가능.
                 tracked = self.tracker.update_with_detections(detections)
 
-                # 4) 시각화 (ID 라벨)
-                #   tracked.xyxy: (N,4), tracked.class_id, tracked.tracker_id 등 사용 가능
-                #   라벨 문자열 구성
-                labels = []
-                for i in range(len(tracked)):
-                    cls_id = int(tracked.class_id[i]) if tracked.class_id is not None else -1
-                    tid = int(tracked.tracker_id[i]) if tracked.tracker_id is not None else -1
-                    conf = float(tracked.confidence[i]) if tracked.confidence is not None else 0.0
-                    labels.append(f"id:{tid} cls:{cls_id} conf:{conf:.2f}")
-
-                # 박스/라벨 그리기
-                img_drawn = self.box_annotator.annotate(
-                    scene=img.copy(),
-                    detections=tracked
-                )
-                img_drawn = self.label_annotator.annotate(
-                    scene=img_drawn,
-                    detections=tracked,
-                    labels=labels
-                )
-
-                # 5)  OCR에 트래킹 정보 반영
               
                 try:
-                    # 예시: 트래킹 결과를 간단 JSON으로 전송
-                    # payload = []
-                    # for i in range(len(tracked)):
-                    #     x1, y1, x2, y2 = map(float, tracked.xyxy[i])
-                    #     tid = int(tracked.tracker_id[i]) if tracked.tracker_id is not None else -1
-                    #     cls_id = int(tracked.class_id[i]) if tracked.class_id is not None else -1
-                    #     conf = float(tracked.confidence[i]) if tracked.confidence is not None else 0.0
-                    #     payload.append({"id": tid, "cls": cls_id, "conf": conf, "bbox": [x1, y1, x2, y2]})
-                    re =  ocr_with_row_clustering(img,detections)
-                    dup =  duplicate_text(re)  
-                    
-                    for i in dup:
-                       cv2.rectangle(img_drawn, (i[4],i[5]),(i[6],i[7]), color=(0,0,255), thickness =2)
-                    #    cv2.putText(img_drawn, "diff_book", (i[4], i[5]-10), fontFace = cv2.FONT_HERSHEY_SIMPLEX, fontScale = 0.6, color = (255, 255, 255), thickness =3)
-                     
-                                   
-                    if re is not None or len(re) != 0:
-                        t = []
-                        for row in re:
-                            t.append({
-                                "row": int(row[0]),             # 행 번호
-                                "text": str(row[1]),             # 텍스트
-                                "id": int(row[2]),               # 인덱스
-                                "bbox": [float(row[3]), float(row[4]), float(row[5]), float(row[6])] }) # 바운딩박스                        
-                        self._send_datachannel_safe(json.dumps({"results": t}))
-                        
-                        
-                        
+                    # 4) 시각화 (ID 라벨)
+                    r_o_c = row_ocr_clustering(img,tracked,img_orignal)
+                    if len(r_o_c) > 0:
+                        total = self.manage.start(r_o_c)
+                        draw_bounding_box(img, total)                                    
+                        # 5) 결과 datachnannel 전송    
+                        self._send_datachannel_safe(json.dumps(total))             
+                                                
                 except Exception as e:
                     print("DataChannel send error:", e)
 
                 # 6) 결과 프레임 교체
-                new_frame = VideoFrame.from_ndarray(img_drawn, format="bgr24")
+                new_frame = VideoFrame.from_ndarray(img, format="bgr24")
                 new_frame.pts = frame.pts
                 new_frame.time_base = frame.time_base
                 with self.lock:
