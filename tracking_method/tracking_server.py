@@ -76,8 +76,7 @@ class YoloTrack(MediaStreamTrack):
 
                 # 2) 탐지 → Detections 변환
                 detections = sv.Detections.from_ultralytics(results)
-                # (필요 시 감도 조정) conf 필터 예: detections = detections[detections.confidence > 0.25]
-
+    
                 # 3) 트래킹 업데이트 (ByteTrack)
                 tracked = self.tracker.update_with_detections(detections)
               #

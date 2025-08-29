@@ -2,8 +2,13 @@ from sklearn.cluster import DBSCAN
 import easyocr
 import numpy as np
 import cv2
-
+from paddleocr import PaddleOCR
 ocr_Reader =  easyocr.Reader(['ko','en'], gpu = True,model_storage_directory= None,detector =False,quantize =False,cudnn_benchmark =True) # 배포시에는 True
+
+ocr = PaddleOCR(
+    use_doc_orientation_classify=False,
+    use_doc_unwarping=False,
+    use_textline_orientation=False)
 
 
 def get_object_detection_boxes(detections):
@@ -45,18 +50,41 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
             boxes_id[i]['ocr_conf'] = None
             continue
 
+
+
+
         # detail=1 → [[bbox, text, conf], ...]
-        result = reader.readtext(cropped, detail=1, paragraph=False)
+        # result = reader.readtext(cropped, detail=1, paragraph=False)
+        
+        result = ocr.predict(cropped)
+        for r in result:
+            texts = r['rec_texts']
+            scores = r['rec_scores']
+            polys = r['rec_polys']   # 위치 좌표
+            
+            for text, conf, poly in zip(texts, scores, polys):
+                print(f"Text: {text}, Conf: {conf:.4f}, Poly: {poly}")    
+                
 
-        if not result:
-            boxes_id[i]['ocr'] = None
-            boxes_id[i]['ocr_conf'] = 0.0
-        else:
-            _, text, conf = result[0]
-            boxes_id[i]['ocr'] = text.strip()
-            boxes_id[i]['ocr_conf'] = float(conf)
+                if not text:
+                    boxes_id[i]['ocr'] = None
+                    boxes_id[i]['ocr_conf'] = 0.0
+                else:
+                    _, text, conf = result[0]
+                    boxes_id[i]['ocr'] = text.strip()
+                    boxes_id[i]['ocr_conf'] = float(conf)
 
-            print("test:", text.strip(), "conf:", conf)
+                    print("test:", text.strip(), "conf:", conf)
+            
+            # if not result:
+            #     boxes_id[i]['ocr'] = None
+            #     boxes_id[i]['ocr_conf'] = 0.0
+            # else:
+            #     _, text, conf = result[0]
+            #     boxes_id[i]['ocr'] = text.strip()
+            #     boxes_id[i]['ocr_conf'] = float(conf)
+
+            #     print("test:", text.strip(), "conf:", conf)
 
     return boxes_id
 
