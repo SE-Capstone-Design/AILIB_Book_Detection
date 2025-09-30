@@ -9,7 +9,6 @@ from aiortc import (
     RTCDataChannel
 )
 import torch
-
 from av import VideoFrame
 from ultralytics import YOLO
 import queue
@@ -17,18 +16,17 @@ import threading
 from tracking_method.state import ManageItem 
 from tracking_method.processing import row_ocr_clustering
 from tracking_method.boundingBox import draw_bounding_box
-
 import os
-
-# === NEW: supervision (ByteTrack + Annotators) ===
 import supervision as sv
+
+# uvicorn tracking_method.tracking_server:app --host 0.0.0.0 --port 8000 --reload  
 
 app = FastAPI()
 pcs = set()
 base_dir = os.path.dirname(os.path.abspath(__file__))
 weights_path = os.path.join(base_dir, "weights.pt")
-model = YOLO(weights_path).to("cuda")  # 탐지 모델 그대로 사용
-
+# model = YOLO(weights_path).to("cuda")  # 탐지 모델 그대로 사용
+model = YOLO(weights_path)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,10 +49,10 @@ class YoloTrack(MediaStreamTrack):
         self.running = True
         self.manage = ManageItem() 
         print(torch.cuda.is_available()) 
-        print(torch.version.cuda)  
-        print(torch.cuda.get_device_name(0))
+        # print(torch.version.cuda)  
+        # print(torch.cuda.get_device_name(0))
 
-        # === NEW: ByteTrack & Annotators ===
+        #  ByteTrack & Annotators
         self.tracker = sv.ByteTrack(track_activation_threshold = 0.5,minimum_consecutive_frames=3,lost_track_buffer = 60,minimum_matching_threshold=0.95,)  
         self.thread = threading.Thread(target=self._yolo_thread, daemon=True)
         self.thread.start()
@@ -116,17 +114,16 @@ class YoloTrack(MediaStreamTrack):
         try:
             self.frame_queue.put_nowait(frame) # 큐에 비동기로 삽입
         except queue.Full:
-            print("⚠️ queue full, dropping frame")
+            print("queue full, dropping frame")
             pass
 
         # --- 결과 프레임 반환 ---
         with self.lock:
-            # if self.result_frame is not None:
+            if self.result_frame is not None:
                 out = self.result_frame
-                # self.result_frame = None   #  사용했으니 초기화
-                return out                
-            # else:
-            #     return frame
+            else:
+                out = frame
+            return out
                  
 
 @app.get("/health", tags=["Health"])
