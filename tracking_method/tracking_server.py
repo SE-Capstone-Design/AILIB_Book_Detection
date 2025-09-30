@@ -49,8 +49,8 @@ class YoloTrack(MediaStreamTrack):
         self.running = True
         self.manage = ManageItem() 
         print(torch.cuda.is_available()) 
-        # print(torch.version.cuda)  
-        # print(torch.cuda.get_device_name(0))
+        print(torch.version.cuda)  
+        print(torch.cuda.get_device_name(0))
 
         #  ByteTrack & Annotators
         self.tracker = sv.ByteTrack(track_activation_threshold = 0.5,minimum_consecutive_frames=3,lost_track_buffer = 60,minimum_matching_threshold=0.95,)  
@@ -143,7 +143,7 @@ async def offer(request: Request):
 
     @pc.on("datachannel")
     def on_datachannel(channel: RTCDataChannel):
-        print("📨 server got datachannel:", channel.label, channel.protocol)
+        print("server got datachannel:", channel.label, channel.protocol)
         data_channel_holder["ch"] = channel
         # YOLO 트랙이 이미 만들어졌다면 연결
         if yolo_track_holder["track"] is not None:
