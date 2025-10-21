@@ -5,7 +5,11 @@ FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
 WORKDIR /app
 
 
-# 🔧 필수 빌드 도구 + OpenCV 의존성 설치
+# PyTorch + CUDA 12.1
+FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+
+WORKDIR /app
+
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential cmake git wget unzip yasm pkg-config \
     libswscale-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev \
@@ -13,26 +17,29 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libgtk2.0-dev libcanberra-gtk-module libcanberra-gtk3-module \
     && rm -rf /var/lib/apt/lists/*
 
-# 🔽 OpenCV + contrib 모듈 소스 다운로드
+# CUDA symbolic link
+RUN ln -s /usr/local/cuda-12.1 /usr/local/cuda
+
+# Build OpenCV (CUDA enabled)
 RUN git clone --branch 4.8.1 https://github.com/opencv/opencv.git && \
     git clone --branch 4.8.1 https://github.com/opencv/opencv_contrib.git && \
-    mkdir -p opencv/build && cd opencv/build && \
+    rm -rf opencv/build && mkdir -p opencv/build && cd opencv/build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=/usr/local \
           -D WITH_CUDA=ON \
           -D WITH_CUDNN=ON \
-          -D OPENCV_DNN_CUDA=ON \
           -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
           -D BUILD_EXAMPLES=OFF \
           -D BUILD_opencv_python3=ON \
           -D PYTHON_EXECUTABLE=$(which python3) .. && \
     make -j$(nproc) && make install && ldconfig
 
+
 # OpenCV 실행에 필요한 라이브러리 설치
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
- && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     libgl1-mesa-glx \
+#     libglib2.0-0 \
+#  && rm -rf /var/lib/apt/lists/*
 
 
 # 의존성 파일 복사 
