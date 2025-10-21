@@ -48,31 +48,29 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
         
         # result = ocr.predict(cropped)
         for r in result:
-            texts = r['rec_texts']
-            scores = r['rec_scores']
-            polys = r['rec_polys']   # 위치 좌표
+            texts = result[0][1]
+            scores = result[0][2]   
+            # polys = r['rec_polys']   # 위치 좌표
             
-            for text, conf, poly in zip(texts, scores, polys):
-                print(f"Text: {text}, Conf: {conf:.4f}, Poly: {poly}")    
-                
+           
 
-                if not text:
-                    boxes_id[i]['ocr'] = None
-                    boxes_id[i]['ocr_conf'] = 0.0
-                else:
-                    _, text, conf = result[0]
-                    boxes_id[i]['ocr'] = text.strip()
-                    boxes_id[i]['ocr_conf'] = float(conf)
+                # if not text:
+                #     boxes_id[i]['ocr'] = None
+                #     boxes_id[i]['ocr_conf'] = 0.0
+                # else:
+                #     _, text, conf = result[0]
+                #     boxes_id[i]['ocr'] = text.strip()
+                #     boxes_id[i]['ocr_conf'] = float(conf)
 
-                    print("test:", text.strip(), "conf:", conf)
+                #     print("test:", text.strip(), "conf:", conf)
             
-            # if not result:
-            #     boxes_id[i]['ocr'] = None
-            #     boxes_id[i]['ocr_conf'] = 0.0
-            # else:
-            #     _, text, conf = result[0]
-            #     boxes_id[i]['ocr'] = text.strip()
-            #     boxes_id[i]['ocr_conf'] = float(conf)
+            if not result:
+                boxes_id[i]['ocr'] = None
+                boxes_id[i]['ocr_conf'] = 0.0
+            else:
+                _, text, conf = result[0]
+                boxes_id[i]['ocr'] = text.strip()
+                boxes_id[i]['ocr_conf'] = float(conf)
 
             #     print("test:", text.strip(), "conf:", conf)
 
