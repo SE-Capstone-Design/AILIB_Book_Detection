@@ -129,6 +129,8 @@ def row_ocr_clustering(tracked,original_img):
 def enhance_img(img):
     print("shape:",img.shape)
     print("dim",img.ndim)
+    print("frame shape:", img.shape, "dtype:", img.dtype)
+    print("frame channels:", 1 if len(img.shape)==2 else img.shape[2])
     
     #1. 2.해상도 키우기 (3~4배 정도)
     img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
