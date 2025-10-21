@@ -9,7 +9,7 @@ WORKDIR /app
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential cmake git wget unzip yasm pkg-config \
     libswscale-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev \
-    libavformat-dev libavcodec-dev libdc1394-22-dev libv4l-dev \
+    libavformat-dev libavcodec-dev libv4l-dev \
     libgtk2.0-dev libcanberra-gtk-module libcanberra-gtk3-module \
     && rm -rf /var/lib/apt/lists/*
 
