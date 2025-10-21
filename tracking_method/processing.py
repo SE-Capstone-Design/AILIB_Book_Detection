@@ -30,6 +30,8 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
     
     # gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
     # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    img = enhance_img(original_img)
+    
       
     for i, box in enumerate(boxes_id):
         x1, y1, x2, y2 = map(int, box["xyxy"])
@@ -124,3 +126,23 @@ def row_ocr_clustering(tracked,original_img):
     return row_ocr_boxes
 
 
+def enhance_img(img):
+    
+    
+    #1. 2.해상도 키우기 (3~4배 정도)
+    img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
+    # 3 그레이스케일 변환
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # 4 대비 강화
+    # gray = cv2.convertScaleAbs(gray, alpha=1.8, beta=0)  # alpha=1.8~2.5로 조절 가능
+    blur = cv2.GaussianBlur(gray, (5,5), 0)
+    gray = cv2.addWeighted(gray, 2.5, blur, -0.8, 0) 
+    
+    th = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                            cv2.THRESH_BINARY, 15, 5)
+    
+    #  글자 두껍게 (Morphology)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,1))
+    proc = cv2.dilate(th, kernel, iterations=1)
+    return proc
