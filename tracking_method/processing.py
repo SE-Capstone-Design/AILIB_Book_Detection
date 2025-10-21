@@ -133,9 +133,9 @@ def enhance_img(img):
     print("frame channels:", 1 if len(img.shape)==2 else img.shape[2])
     img = img.copy()
     #1. 2.해상도 키우기 (3~4배 정도)
-    img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
     # 3 그레이스케일 변환
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
     # 4 대비 강화
     # gray = cv2.convertScaleAbs(gray, alpha=1.8, beta=0)  # alpha=1.8~2.5로 조절 가능
