@@ -36,7 +36,7 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
         # gray = clahe.apply(gray)
         
         
-        original_img = enhance_img(cropped.copy())    
+        cropped = enhance_img(cropped)    
 
         if cropped.size == 0:
             boxes_id[i]['ocr'] = None
