@@ -30,7 +30,7 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
     
     # gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
     # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    original_img = enhance_img(original_img)
+    original_img = enhance_img(original_img)    
     
       
     for i, box in enumerate(boxes_id):
@@ -127,7 +127,8 @@ def row_ocr_clustering(tracked,original_img):
 
 
 def enhance_img(img):
-    
+    print("shape:",img.shape)
+    print("dim",img.ndim)
     
     #1. 2.해상도 키우기 (3~4배 정도)
     img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
