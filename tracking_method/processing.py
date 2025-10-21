@@ -30,7 +30,7 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
     
     # gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
     # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    img = enhance_img(original_img)
+    original_img = enhance_img(original_img)
     
       
     for i, box in enumerate(boxes_id):
