@@ -61,7 +61,7 @@ class YoloTrack(MediaStreamTrack):
                 results = model(img)[0]
                 ocr_result = ocr_with_row_clustering(img, results)
 
-                # ✅ ndarray → list 변환 후 JSON 직렬화
+                #  ndarray → list 변환 후 JSON 직렬화
                 try:
                     
                     message = json.dumps(ocr_result.tolist() if hasattr(ocr_result, "tolist") else ocr_result)

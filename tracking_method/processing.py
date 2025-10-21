@@ -131,14 +131,14 @@ def enhance_img(img):
     #1. 2.해상도 키우기 (3~4배 정도)
     img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
     # 3 그레이스케일 변환
-      # ⚠️ BGR -> GRAY 변환
+      #  BGR -> GRAY 변환
     if len(img.shape) == 3:
         if img.shape[2] == 3:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         elif img.shape[2] == 4:
             gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
         else:
-            print(f"⚠️ Unexpected channel count: {img.shape[2]}")
+            print(f"/ Unexpected channel count: {img.shape[2]}")
             gray = img[:, :, 0]
     else:
         gray = img  # 이미 그레이스케일이면 그대로 사용

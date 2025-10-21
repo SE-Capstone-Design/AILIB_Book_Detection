@@ -132,6 +132,13 @@ async def health_check():
 
 @app.post("/offer")
 async def offer(request: Request):
+    
+    print("CUDA available:", cv2.cuda.getCudaEnabledDeviceCount() > 0)
+    if cv2.cuda.getCudaEnabledDeviceCount() > 0:
+        print("Using GPU:", cv2.cuda.getDevice())
+        cv2.cuda.setDevice(0)
+    else:
+        print(" GPU unavailable — running on CPU")
     params = await request.json()
     description = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
     pc = RTCPeerConnection()
