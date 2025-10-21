@@ -120,11 +120,10 @@ class YoloTrack(MediaStreamTrack):
         # --- 결과 프레임 반환 ---
         with self.lock:
             if self.result_frame is not None:
-                out = VideoFrame.from_image(self.result_frame)
-                # out = self.result_frame
+                out = self.result_frame
+                result_frame = None
             else:
-                # out = frame
-                out= VideoFrame.from_image(self.frame)
+                out = frame
             return out
                  
 
