@@ -26,21 +26,17 @@ def extract_text_by_boxes_easyocr(original_img, boxes_id, reader=None):
     """
     if reader is None:
         reader = ocr_Reader
-    
-    
-    # gray = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
-    # _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    original_img = enhance_img(original_img)    
-    
-      
+     
     for i, box in enumerate(boxes_id):
         x1, y1, x2, y2 = map(int, box["xyxy"])
 
         cropped = original_img[y1:y2+1, x1:x2+1]
-        gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        gray = clahe.apply(gray)
-
+        # gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        # gray = clahe.apply(gray)
+        
+        
+        original_img = enhance_img(cropped.copy())    
 
         if cropped.size == 0:
             boxes_id[i]['ocr'] = None
@@ -131,7 +127,7 @@ def enhance_img(img):
     print("dim",img.ndim)
     print("frame shape:", img.shape, "dtype:", img.dtype)
     print("frame channels:", 1 if len(img.shape)==2 else img.shape[2])
-    img = img.copy().astype(np.uint8)
+    img = img.astype(np.uint8)
     #1. 2.해상도 키우기 (3~4배 정도)
     img = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC)
     # 3 그레이스케일 변환
