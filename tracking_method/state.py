@@ -155,25 +155,38 @@ class ManageItem:
                 
     def detect_bookLabel(self):        
         for k, v in self.items.items():
-            if not v:
+            if not v: # 데이터가 없을 시 판정 X (혹시모를 예외처리)
                 continue
-            if len(v) < 3:
+            if len(v) < 3: # 2개이하일때는 판정을 안함(보류 판정)
                 for j in self.items[k]:
-                    j.status = ItemStatus.PENDING
+                    j.status = ItemStatus.PENDING  # 보류 판정
+                continue
+            
+            new_items = [it for it in v if it.status == ItemStatus.NEW or it.status == ItemStatus.MISPLACED]
+            if not new_items: #없을경우 해당 행 종료 
                 continue
 
-            new_items = sorted(v, key=lambda x: float(x.xyxy[0]))
+            # DDC 키 기준 정렬 (x좌표 순서)
+            new_items = sorted(new_items, key=lambda x: float(x.xyxy[0]))
 
-            last_value = -float('inf')
-            for it in new_items:
+            # parsed (DdcKey) 추출
+            parsed_indices = [(idx, it.parsed) 
+                  for idx, it in enumerate(new_items) 
+                  if it.parsed is not None]
+
+            parsed_keys = [p for _, p in parsed_indices]
+            lis_idx = self._lis_indices(parsed_keys)
+
+            # lis_idx는 parsed_keys 인덱스 기준이니까,
+            # 다시 new_items 인덱스로 변환
+            lis_newitem_indices = {parsed_indices[i][0] for i in lis_idx}
+
+            # LIS 안에 포함 → 정상, LIS 밖 → 잘못 배치
+            for idx, it in enumerate(new_items):
                 if it.parsed is None:
                     it.status = ItemStatus.PENDING
-                    continue
-
-                val = float(it.parsed)
-                if val >= last_value:
+                elif idx in lis_newitem_indices:  
                     it.status = ItemStatus.NORMAL
-                    last_value = val
                 else:
                     it.status = ItemStatus.MISPLACED   
                 
