@@ -119,8 +119,17 @@ class ManageItem:
         tails = []
         prev = [-1] * len(keys)
 
-        def less(i: int, j: int) -> bool:
-            return keys[i].tup() < keys[j].tup()
+        def less(i, j):
+            a, b = keys[i], keys[j]
+            if hasattr(a, 'tup') and hasattr(b, 'tup'):
+                return a.tup() < b.tup()
+            # 하나 혹은 둘 다 float (또는 numeric) 인 경우
+            try:
+                return float(a) < float(b)
+            except Exception:
+                # 실패 시 안전하게 False
+                return False
+
 
         for i in range(len(keys)):
             lo, hi = 0, len(tails) # 초기화 low : 0 index high : 입력된 len(list) 
