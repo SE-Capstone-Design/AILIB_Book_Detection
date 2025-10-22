@@ -62,7 +62,7 @@ def parse_ddc_key(raw):
         return None
     cls = int(m.group(1))
     dec = Decimal('0.' + m.group(2)) if m.group(2) else Decimal(0)
-    return cls + dec
+    return float(cls + dec)
 
 # def _normalize(s):
 #     s = unicodedata.normalize('NFKC', (s or "").upper())
