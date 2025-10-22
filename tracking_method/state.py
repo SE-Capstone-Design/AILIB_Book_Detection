@@ -167,7 +167,8 @@ class ManageItem:
                 continue
 
             # DDC 키 기준 정렬 (x좌표 순서)
-            new_items = sorted(new_items, key=lambda x: float(x.xyxy[0]))
+            new_items = new_items
+            # sorted(new_items, key=lambda x: float(x.xyxy[0]))
 
             # parsed (DdcKey) 추출
             parsed_indices = [(idx, it.parsed) 
