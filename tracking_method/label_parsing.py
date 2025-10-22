@@ -61,7 +61,7 @@ def parse_ddc_key(raw):
     if not m:
         return None
     cls = int(m.group(1))
-    dec = Decimal('0.' + m.group(2)) if m.group(2) else Decimal(0)
+    dec = float('0.' + m.group(2)) if m.group(2) else 0.0
     return float(cls + dec)
 
 # def _normalize(s):
