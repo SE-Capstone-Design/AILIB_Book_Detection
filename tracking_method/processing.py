@@ -105,7 +105,8 @@ def cluster_boxes(boxes, eps=800, min_samples=1):
     labels = clustering.labels_  # 각 박스가 속한 행 번호
 
     for i in range(len(boxes)):
-        boxes[i]['row'] = labels[i]
+        # boxes[i]['row'] = labels[i]
+        boxes[i]['row'] = 0
     
     return boxes
 
